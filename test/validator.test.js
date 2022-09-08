@@ -723,10 +723,23 @@ describe("attestation validation", function() {
 			});
 
 			describe("validateExtensions", function() {
-				it("returns true on validation", async function() {
-					const ret = await attResp.validateExtensions();
+				// original test data does not contain extensions
+				it("returns true on validation without extensions", async function() {
+					const ret = attResp.validateExtensions();
+					assert.isTrue(ret);
+					assert.isFalse(attResp.audit.journal.has("webAuthnExtensions"));
+				});
+
+				it("returns true on validation with extensions", async function() {
+					attResp.authnrData.set("webAuthnExtensions", [{ credProtect: 1 }]);
+					const ret = attResp.validateExtensions();
 					assert.isTrue(ret);
 					assert.isTrue(attResp.audit.journal.has("webAuthnExtensions"));
+				});
+
+				it("throws on invalid extensions", async function() {
+					attResp.authnrData.set("webAuthnExtensions", [42]);
+					assert.throws(() => attResp.validateExtensions(), Error, "webAuthnExtensions aren't valid");
 				});
 			});
 
